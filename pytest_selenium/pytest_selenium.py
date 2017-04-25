@@ -8,6 +8,7 @@ import os
 
 import pytest
 from selenium import webdriver
+from appium import webdriver as appium_webdriver
 from selenium.webdriver.support.event_firing_webdriver import \
     EventFiringWebDriver
 
@@ -23,7 +24,9 @@ SUPPORTED_DRIVERS = [
     'Remote',
     'Safari',
     'SauceLabs',
-    'TestingBot']
+    'TestingBot',
+    'Appium',
+    'WinApp']
 
 
 def pytest_addhooks(pluginmanager):
@@ -73,6 +76,10 @@ def driver_class(request):
     driver = request.config.getoption('driver')
     if driver is None:
         raise pytest.UsageError('--driver must be specified')
+    elif driver == 'Appium':
+        return getattr(appium_webdriver, driver, appium_webdriver.Remote)
+    elif driver == 'WinApp':
+        return getattr(appium_webdriver, driver, appium_webdriver.Remote)
     return getattr(webdriver, driver, webdriver.Remote)
 
 
@@ -117,7 +124,7 @@ def pytest_configure(config):
     if hasattr(config, '_metadata'):
         config._metadata['Driver'] = config.getoption('driver')
         config._metadata['Capabilities'] = config._capabilities
-        if config.option.driver == 'Remote':
+        if config.option.driver in ('Remote', 'Appium', 'WinApp'):
             config._metadata['Server'] = 'http://{0}:{1}'.format(
                 config.getoption('host'),
                 config.getoption('port'))
