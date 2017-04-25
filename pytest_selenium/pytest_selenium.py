@@ -59,26 +59,34 @@ def driver_kwargs(request, capabilities, driver_class, driver_path,
                   firefox_options, firefox_profile):
     kwargs = {}
     driver = request.config.getoption('driver').lower()
-    kwargs.update(getattr(drivers, driver).driver_kwargs(
-        capabilities=capabilities,
-        driver_path=driver_path,
-        firefox_options=firefox_options,
-        firefox_profile=firefox_profile,
-        host=request.config.getoption('host'),
-        port=request.config.getoption('port'),
-        request=request,
-        test='.'.join(split_class_and_test_names(request.node.nodeid))))
+    if driver in ('winapp', 'appium'):
+        kwargs.update(getattr(drivers, driver).driver_kwargs(
+            capabilities=capabilities,
+            host=request.config.getoption('host'),
+            port=request.config.getoption('port'),
+            request=request,
+            test='.'.join(split_class_and_test_names(request.node.nodeid))))
+    else:
+        kwargs.update(getattr(drivers, driver).driver_kwargs(
+            capabilities=capabilities,
+            driver_path=driver_path,
+            firefox_options=firefox_options,
+            firefox_profile=firefox_profile,
+            host=request.config.getoption('host'),
+            port=request.config.getoption('port'),
+            request=request,
+            test='.'.join(split_class_and_test_names(request.node.nodeid))))
     return kwargs
 
 
 @pytest.fixture
 def driver_class(request):
-    driver = request.config.getoption('driver')
+    driver = request.config.getoption('driver').lower()
     if driver is None:
         raise pytest.UsageError('--driver must be specified')
-    elif driver == 'Appium':
+    elif driver == 'appium':
         return getattr(appium_webdriver, driver, appium_webdriver.Remote)
-    elif driver == 'WinApp':
+    elif driver == 'winapp':
         return getattr(appium_webdriver, driver, appium_webdriver.Remote)
     return getattr(webdriver, driver, webdriver.Remote)
 
